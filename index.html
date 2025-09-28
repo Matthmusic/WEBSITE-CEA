@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEA Ingénierie - Bureau d'Étude Électrique</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="ico/CEAHN.svg" alt="CEA Ingénierie" class="logo" id="navLogo">
+            </div>
+            <ul class="nav-menu" id="nav-menu-list">
+                <li class="nav-item"><a href="#accueil" class="nav-link">Accueil</a></li>
+                <li class="nav-item"><a href="#services" class="nav-link">Services</a></li>
+                <li class="nav-item"><a href="#projets" class="nav-link">Projets</a></li>
+                <li class="nav-item"><a href="#equipe" class="nav-link">Équipe</a></li>
+                <li class="nav-item"><a href="#clients" class="nav-link">Clients</a></li>
+                <li class="nav-item"><a href="#contact" class="nav-link">Contact</a></li>
+                <li class="nav-item">
+                    <button class="theme-toggle" aria-label="Changer de thème">
+                        <i class="fas fa-sun"></i>
+                    </button>
+                </li>
+            </ul>
+            <button class="hamburger" aria-controls="nav-menu-list" aria-expanded="false">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="accueil" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <span class="gradient-text">CEA Ingénierie</span>
+                    <br>
+                    Excellence en Électricité
+                </h1>
+                <p class="hero-description">
+                    Bureau d'étude électrique fondé par trois associés passionnés,
+                    spécialisé dans la conception et la réalisation de projets électriques innovants.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#services" class="btn btn-primary">
+                        <span>Nos Services</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                    <a href="#contact" class="btn btn-secondary">
+                        <span>Nous Contacter</span>
+                        <i class="fas fa-phone"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="floating-card">
+                    <i class="fas fa-bolt"></i>
+                    <h3>Innovation</h3>
+                </div>
+                <div class="floating-card">
+                    <i class="fas fa-users"></i>
+                    <h3>Équipe</h3>
+                </div>
+                <div class="floating-card">
+                    <i class="fas fa-award"></i>
+                    <h3>Excellence</h3>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Nos Services</h2>
+                <p class="section-subtitle">
+                    Solutions complètes en ingénierie électrique
+                </p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-drafting-compass"></i>
+                    </div>
+                    <h3>Conception & Étude</h3>
+                    <p>Études techniques approfondies et conception de systèmes électriques sur mesure</p>
+                    <ul>
+                        <li>Plans électriques</li>
+                        <li>Calculs de dimensionnement</li>
+                        <li>Études de faisabilité</li>
+                    </ul>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-industry"></i>
+                    </div>
+                    <h3>Industrie</h3>
+                    <p>Solutions électriques industrielles performantes et sécurisées</p>
+                    <ul>
+                        <li>Automatisation</li>
+                        <li>Distribution électrique</li>
+                        <li>Maintenance préventive</li>
+                    </ul>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h3>Tertiaire</h3>
+                    <p>Installations électriques pour bâtiments commerciaux et bureaux</p>
+                    <ul>
+                        <li>Éclairage intelligent</li>
+                        <li>Réseaux VDI</li>
+                        <li>Systèmes de sécurité</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Équipe Section -->
+    <section id="equipe" class="team">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Notre Équipe</h2>
+                <p class="section-subtitle">
+                    Trois associés, une vision commune
+                </p>
+            </div>
+            <div class="team-grid">
+                <div class="team-member">
+                    <div class="member-photo">
+                        <div class="photo-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    <h3>Frédéric Ménardi</h3>
+                    <p class="member-role">Spécialiste HTA / HTB</p>
+                    <p class="member-description">
+                        Expert en conception de systèmes électriques industriels avec plus de 15 ans d'expérience dans l'Aéroportuaire.
+                    </p>
+                </div>
+                <div class="team-member">
+                    <div class="member-photo">
+                        <div class="photo-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    <h3>Jérôme Voltarel</h3>
+                    <p class="member-role">Spécialiste HT/BT</p>
+                    <p class="member-description">
+                        Expert en conception de systèmes électriques pour le secteur industriel.
+                    </p>
+                </div>
+                <div class="team-member">
+                    <div class="member-photo">
+                        <div class="photo-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    <h3>Laurent Marques</h3>
+                    <p class="member-role">Spécialiste HT/BT/CFA</p>
+                    <p class="member-description">
+                        Spécialisé dans la gestion de projets complexes dans les secteurs public et tertiaire.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Clients Section -->
+    <section id="clients" class="clients">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Ils Nous Font Confiance</h2>
+                <p class="section-subtitle">
+                    Nos partenaires et clients de référence
+                </p>
+            </div>
+            <div class="clients-grid">
+                <div class="client-category">
+                    <h3>Grands Comptes & Partenaires</h3>
+                    <div class="client-list">
+                        <div class="client-item">
+                            <i class="fas fa-plane-departure"></i>
+                            <span>Aéroports (Paris, Lyon, Bordeaux...)</span>
+                        </div>
+                        <div class="client-item">
+                            <i class="fas fa-gem"></i>
+                            <span>SBM Monaco</span>
+                        </div>
+                        <div class="client-item">
+                            <i class="fas fa-anchor"></i>
+                            <span>Ports de plaisance (Cannes...)</span>
+                        </div>
+                        <div class="client-item">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>LIDL</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="client-category">
+                    <h3>Secteur Public & Tertiaire</h3>
+                    <div class="client-list">
+                        <div class="client-item">
+                            <i class="fas fa-city"></i>
+                            <span>Mairies</span>
+                        </div>
+                        <div class="client-item">
+                            <i class="fas fa-hospital"></i>
+                            <span>Cliniques & Hôpitaux (Nice...)</span>
+                        </div>
+                        <div class="client-item">
+                            <i class="fas fa-landmark"></i>
+                            <span>Conseil Général 06</span>
+                        </div>
+                        <div class="client-item">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Collectivités diverses</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="stats-container">
+                <div class="stat-item">
+                    <span class="stat-number" data-count="150">0</span>
+                    <span class="stat-label">Projets Réalisés</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" data-count="50">0</span>
+                    <span class="stat-label">Clients Satisfaits</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" data-count="5">0</span>
+                    <span class="stat-label">Années d'Expérience</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" data-count="100">0</span>
+                    <span class="stat-label">% Satisfaction</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projets Section -->
+    <section id="projets" class="projects">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Nos Réalisations</h2>
+                <p class="section-subtitle">
+                    Projets marquants et innovations
+                </p>
+            </div>
+            <div class="projects-grid">
+                <div class="project-card">
+                    <div class="project-image">
+                        <i class="fas fa-plane-departure"></i>
+                    </div>
+                    <div class="project-content">
+                        <h3>Aéroport International</h3>
+                        <p>Modernisation des installations électriques et du balisage lumineux d'un aéroport international.</p>
+                        <div class="project-tags">
+                            <span class="tag">Aéroportuaire</span>
+                            <span class="tag">Balisage</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <div class="project-image">
+                        <i class="fas fa-hospital"></i>
+                    </div>
+                    <div class="project-content">
+                        <h3>Clinique Privée</h3>
+                        <p>Mise en conformité et optimisation des installations électriques d'un établissement de santé.</p>
+                        <div class="project-tags">
+                            <span class="tag">Santé</span>
+                            <span class="tag">Conformité</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="project-card">
+                    <div class="project-image">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="project-content">
+                        <h3>Centre Commercial</h3>
+                        <p>Éclairage intelligent et système de gestion énergétique avancé</p>
+                        <div class="project-tags">
+                            <span class="tag">Tertiaire</span>
+                            <span class="tag">IoT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Contactez-Nous</h2>
+                <p class="section-subtitle">
+                    Discutons de votre projet
+                </p>
+            </div>
+            <div class="contact-container">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <h3>Adresse</h3>
+                            <p>23 boulevard de l'ariane<br>06300 Nice</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <h3>Téléphone</h3>
+                            <p>+33 4 93 87 25 17</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <h3>Email</h3>
+                            <p>contact@conception-ea.fr</p>
+                        </div>
+                    </div>
+                </div>
+                <form class="contact-form">
+                    <div class="form-group">
+                        <input type="text" id="name" name="name" placeholder="Votre nom" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="email" name="email" placeholder="Votre email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="subject" name="subject" placeholder="Sujet" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="message" name="message" placeholder="Votre message" rows="5" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <span>Envoyer</span>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <img src="ico/CEAHN.svg" alt="CEA Ingénierie" class="footer-logo" id="footerLogo">
+                    <p>Bureau d'étude électrique d'excellence, votre partenaire pour tous vos projets électriques.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Services</h3>
+                    <ul>
+                        <li><a href="#services">Conception & Étude</a></li>
+                        <li><a href="#services">Industrie</a></li>
+                        <li><a href="#services">Tertiaire</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Contact</h3>
+                    <ul>
+                        <li><i class="fas fa-phone"></i> +33 4 93 87 25 17</li>
+                        <li><i class="fas fa-envelope"></i> contact@conception-ea.fr</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Nice, France</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 CEA Ingénierie. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
