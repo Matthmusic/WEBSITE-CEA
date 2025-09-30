@@ -29,6 +29,11 @@ class ThemeManager {
         // Add animation class to the toggle buttons
         this.themeToggle.classList.add('animating');
         this.themeToggle.addEventListener('animationend', () => this.themeToggle.classList.remove('animating'), { once: true });
+
+        // Badge changement de thème
+        if (window.badgeManager) {
+            window.badgeManager.earnBadge('theme-switcher');
+        }
     }
 
     updateThemeIcon() {
@@ -166,7 +171,6 @@ class AnimationManager {
         this.setupScrollAnimations();
         this.setupCounterAnimations();
         this.setupFloatingCardAnimations();
-        this.setupHeroParallax();
     }
 
     setupScrollAnimations() {
@@ -252,12 +256,19 @@ class ContactFormManager {
         }
     }
 
-    handleSubmit(e) {
+    async handleSubmit(e) {
         e.preventDefault();
 
-        // Get form data
-        const formData = new FormData(this.form);
-        const data = Object.fromEntries(formData);
+        // Validate all fields
+        const inputs = this.form.querySelectorAll('input, textarea');
+        let isFormValid = true;
+        inputs.forEach(input => {
+            if (!this.validateField(input)) {
+                isFormValid = false;
+            }
+        });
+
+        if (!isFormValid) return;
 
         // Show loading state
         const submitBtn = this.form.querySelector('button[type="submit"]');
@@ -265,15 +276,36 @@ class ContactFormManager {
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi en cours...';
         submitBtn.disabled = true;
 
-        // Simulate form submission (replace with actual form handling)
-        setTimeout(() => {
-            this.showSuccessMessage();
-            this.form.reset();
+        try {
+            const formData = new FormData(this.form);
+            const response = await fetch(this.form.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
 
+            const result = await response.json();
+
+            if (response.ok) {
+                this.showSuccessMessage();
+                this.form.reset();
+                // Effacer les messages d'erreur des champs après succès
+                inputs.forEach(input => this.clearFieldError(input));
+            } else {
+                // Affiche l'erreur renvoyée par le serveur PHP
+                this.showErrorMessage(result.message || 'Une erreur serveur est survenue.');
+            }
+
+        } catch (error) {
+            console.error('Erreur lors de l\'envoi du formulaire:', error);
+            this.showErrorMessage('Impossible de contacter le serveur. Veuillez réessayer.');
+        } finally {
             // Reset button
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
-        }, 2000);
+        }
     }
 
     setupFormValidation() {
@@ -342,12 +374,76 @@ class ContactFormManager {
             Message envoyé avec succès ! Nous vous répondrons dans les plus brefs délais.
         `;
 
-        this.form.parentNode.insertBefore(successDiv, this.form);
+        this.form.insertBefore(successDiv, this.form.firstChild);
+
+        // Lancer les confettis
+        this.launchConfetti();
+
+        // Badge envoi formulaire
+        if (window.badgeManager) {
+            window.badgeManager.earnBadge('form-sender');
+        }
 
         // Remove success message after 5 seconds
         setTimeout(() => {
             successDiv.remove();
         }, 5000);
+    }
+
+    showErrorMessage(message = 'Une erreur est survenue. Veuillez réessayer.') {
+        // Create error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message';
+        errorDiv.innerHTML = `
+            <i class="fas fa-exclamation-circle"></i>
+            ${message}
+        `;
+
+        this.form.insertBefore(errorDiv, this.form.firstChild);
+
+        // Remove error message after 5 seconds
+        setTimeout(() => {
+            errorDiv.remove();
+        }, 5000);
+    }
+
+    launchConfetti() {
+        const colors = ['#ff914d', '#ff751f', '#7a2f00', '#00ff00', '#74b9ff'];
+        const confettiCount = 100;
+
+        for (let i = 0; i < confettiCount; i++) {
+            setTimeout(() => {
+                this.createConfetti(colors);
+            }, i * 30);
+        }
+    }
+
+    createConfetti(colors) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+
+        // Position aléatoire en haut de l'écran
+        const startX = Math.random() * window.innerWidth;
+        const endX = startX + (Math.random() - 0.5) * 200;
+        const rotation = Math.random() * 360;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        const size = Math.random() * 10 + 5;
+        const duration = Math.random() * 2 + 2;
+
+        confetti.style.left = startX + 'px';
+        confetti.style.width = size + 'px';
+        confetti.style.height = size + 'px';
+        confetti.style.backgroundColor = color;
+        confetti.style.setProperty('--end-x', endX + 'px');
+        confetti.style.setProperty('--rotation', rotation + 'deg');
+        confetti.style.setProperty('--duration', duration + 's');
+
+        document.body.appendChild(confetti);
+
+        // Retirer le confetti après l'animation
+        setTimeout(() => {
+            confetti.remove();
+        }, duration * 1000);
     }
 }
 
@@ -399,7 +495,7 @@ class PerformanceManager {
     init() {
         this.optimizeImages();
         this.setupLazyLoading();
-        this.preloadCriticalResources();
+        this.handleImageErrors();
     }
 
     optimizeImages() {
@@ -430,24 +526,669 @@ class PerformanceManager {
         }
     }
 
-    preloadCriticalResources() {
-        // Preload critical CSS and fonts
-        const criticalResources = [
-            'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
-            'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
-        ];
-
-        criticalResources.forEach(href => {
-            const link = document.createElement('link');
-            link.rel = 'preload';
-            link.as = 'style';
-            link.href = href;
-            link.onload = function() {
-                this.onload = null;
-                this.rel = 'stylesheet';
-            };
-            document.head.appendChild(link);
+    handleImageErrors() {
+        const images = document.querySelectorAll('img');
+        images.forEach(img => {
+            img.addEventListener('error', () => {
+                // Ajoute une classe à l'image pour la masquer via CSS
+                img.classList.add('img-error');
+                console.warn(`Image non trouvée, affichage du placeholder : ${img.src}`);
+            });
         });
+    }
+}
+
+// Mode AutoCAD
+class AutoCADManager {
+    constructor() {
+        this.isActive = localStorage.getItem('autocad-mode') === 'true';
+        this.cursor = null;
+        this.clickSound = new Audio('sounds/autocad-click.mp3'); // Chemin vers votre fichier son
+        this.konami = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        this.konamiIndex = 0;
+        this.secretClicks = 0;
+        this.init();
+    }
+
+    init() {
+        // Ajouter le toggle
+        this.addToggle();
+
+        // Appliquer l'état initial
+        if (this.isActive) {
+            this.enableAutoCADMode();
+        }
+
+        // Easter eggs
+        this.initEasterEggs();
+    }
+
+    initEasterEggs() {
+        // Konami Code pour activer mode AutoCAD
+        document.addEventListener('keydown', (e) => {
+            if (e.key === this.konami[this.konamiIndex]) {
+                this.konamiIndex++;
+                if (this.konamiIndex === this.konami.length) {
+                    this.activateKonamiEasterEgg();
+                    this.konamiIndex = 0;
+                }
+            } else {
+                this.konamiIndex = 0;
+            }
+        });
+
+        // Triple-clic sur le logo
+        const logo = document.querySelector('.nav-logo');
+        if (logo) {
+            logo.addEventListener('click', () => {
+                this.secretClicks++;
+                if (this.secretClicks === 3) {
+                    this.activateLogoEasterEgg();
+                    this.secretClicks = 0;
+                }
+                setTimeout(() => { this.secretClicks = 0; }, 2000);
+            });
+        }
+
+        // Clic long sur le bouton AutoCAD (2s)
+        const autocadBtn = document.querySelector('.autocad-toggle');
+        if (autocadBtn) {
+            let pressTimer;
+            let progressRing;
+
+            autocadBtn.addEventListener('mousedown', (e) => {
+                // Créer l'anneau de progression
+                progressRing = document.createElement('div');
+                progressRing.className = 'long-press-ring';
+                autocadBtn.appendChild(progressRing);
+
+                // Animer l'anneau
+                setTimeout(() => progressRing.classList.add('active'), 10);
+
+                pressTimer = setTimeout(() => {
+                    this.activateLongPressEasterEgg();
+                    if (progressRing) progressRing.remove();
+                }, 2000);
+            });
+
+            autocadBtn.addEventListener('mouseup', () => {
+                clearTimeout(pressTimer);
+                if (progressRing) {
+                    progressRing.remove();
+                    progressRing = null;
+                }
+            });
+
+            autocadBtn.addEventListener('mouseleave', () => {
+                clearTimeout(pressTimer);
+                if (progressRing) {
+                    progressRing.remove();
+                    progressRing = null;
+                }
+            });
+        }
+    }
+
+    activateKonamiEasterEgg() {
+        // Active le mode AutoCAD avec effet spécial SANS toggle normal
+        // Juste activer le mode directement
+        if (!this.isActive) {
+            this.isActive = true;
+            localStorage.setItem('autocad-mode', 'true');
+            document.documentElement.setAttribute('data-autocad', 'true');
+
+            // Créer le curseur manuellement si pas déjà fait
+            if (!this.cursor) {
+                this.createCursor();
+            }
+
+            // Badge découverte mode CAD
+            if (window.badgeManager) {
+                window.badgeManager.earnBadge('cad-discoverer');
+            }
+        }
+
+        this.showEasterEggMessage('🎮 Konami Code activé ! Mode AutoCAD ON');
+        this.createMatrixRain();
+
+        // Badge Konami
+        if (window.badgeManager) {
+            window.badgeManager.earnBadge('konami-master');
+        }
+
+        console.log('🎮 Konami Mode AutoCAD activé');
+    }
+
+    activateLogoEasterEgg() {
+        // Fait tourner tous les logos
+        this.showEasterEggMessage('🔄 Logos en folie !');
+        const logos = document.querySelectorAll('.logo, .footer-logo');
+        logos.forEach(logo => {
+            logo.style.animation = 'spin-crazy 2s ease-in-out';
+        });
+    }
+
+    activateLongPressEasterEgg() {
+        // Message secret des fondateurs
+        this.showEasterEggMessage('⚡ "La tension monte, l\'intensité aussi !" - Les fondateurs de CEA', 5000);
+        this.createElectricSparks();
+
+        // Effet flash éclair
+        this.createLightningFlash();
+    }
+
+    createLightningFlash() {
+        const flash = document.createElement('div');
+        flash.className = 'lightning-flash';
+        document.body.appendChild(flash);
+
+        setTimeout(() => flash.classList.add('active'), 10);
+        setTimeout(() => {
+            flash.classList.remove('active');
+            setTimeout(() => flash.remove(), 500);
+        }, 200);
+    }
+
+    showEasterEggMessage(message, duration = 3000) {
+        const toast = document.createElement('div');
+        toast.className = 'easter-egg-toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
+    }
+
+    createMatrixRain() {
+        const chars = '01CEA⚡HTA HTB';
+        for (let i = 0; i < 30; i++) {
+            const drop = document.createElement('div');
+            drop.className = 'matrix-drop';
+            drop.textContent = chars[Math.floor(Math.random() * chars.length)];
+            drop.style.left = Math.random() * 100 + '%';
+            drop.style.animationDuration = (Math.random() * 2 + 1) + 's';
+            document.body.appendChild(drop);
+
+            setTimeout(() => drop.remove(), 3000);
+        }
+    }
+
+    createElectricSparks() {
+        // Créer des éclairs pendant 3 secondes
+        const duration = 3000;
+        const interval = 100;
+        const sparksPerWave = 5;
+
+        const createWave = () => {
+            for (let i = 0; i < sparksPerWave; i++) {
+                const spark = document.createElement('div');
+                spark.className = 'electric-spark';
+                spark.style.left = Math.random() * 100 + '%';
+                spark.style.top = Math.random() * 100 + '%';
+                spark.style.animationDuration = (Math.random() * 0.5 + 0.5) + 's';
+                document.body.appendChild(spark);
+
+                setTimeout(() => spark.remove(), 1000);
+            }
+        };
+
+        let elapsed = 0;
+        const sparkInterval = setInterval(() => {
+            createWave();
+            elapsed += interval;
+            if (elapsed >= duration) {
+                clearInterval(sparkInterval);
+            }
+        }, interval);
+    }
+
+    addToggle() {
+        const toggle = document.querySelector('.autocad-toggle');
+        if (toggle) {
+            toggle.addEventListener('click', () => this.toggleMode());
+        }
+    }
+
+    toggleMode() {
+        // Joue le son du clic
+        this.clickSound.currentTime = 0; // Rembobine le son au début (utile si on clique vite)
+        this.clickSound.play();
+
+        this.isActive = !this.isActive;
+        localStorage.setItem('autocad-mode', this.isActive);
+
+        if (this.isActive) {
+            this.enableAutoCADMode();
+        } else {
+            this.disableAutoCADMode();
+        }
+    }
+
+    enableAutoCADMode() {
+        document.documentElement.setAttribute('data-autocad', 'true');
+        this.createCursor();
+        console.log('🎯 Mode AutoCAD activé');
+
+        // Badge découverte mode CAD
+        if (window.badgeManager) {
+            window.badgeManager.earnBadge('cad-discoverer');
+        }
+    }
+
+    disableAutoCADMode() {
+        document.documentElement.removeAttribute('data-autocad');
+        this.removeCursor();
+        console.log('✨ Mode AutoCAD désactivé');
+    }
+
+    createCursor() {
+        if (this.cursor) return;
+
+        // Créer le conteneur de curseur
+        const cursorContainer = document.createElement('div');
+        cursorContainer.id = 'autocad-cursor';
+
+        // Ligne horizontale
+        const horizontal = document.createElement('div');
+        horizontal.className = 'crosshair-horizontal';
+
+        // Ligne verticale
+        const vertical = document.createElement('div');
+        vertical.className = 'crosshair-vertical';
+
+        // Carré central
+        const center = document.createElement('div');
+        center.className = 'crosshair-center';
+
+        cursorContainer.appendChild(horizontal);
+        cursorContainer.appendChild(vertical);
+        cursorContainer.appendChild(center);
+        document.body.appendChild(cursorContainer);
+
+        this.cursor = { container: cursorContainer, horizontal, vertical, center };
+        this.bindCursorEvents();
+    }
+
+    removeCursor() {
+        if (this.cursor) {
+            this.cursor.container.remove();
+            this.cursor = null;
+        }
+    }
+
+    bindCursorEvents() {
+        if (!this.cursor) return;
+
+        document.addEventListener('mousemove', (e) => {
+            if (!this.isActive) return;
+
+            this.cursor.horizontal.style.top = `${e.clientY}px`;
+            this.cursor.vertical.style.left = `${e.clientX}px`;
+            this.cursor.center.style.top = `${e.clientY - 5.5}px`;
+            this.cursor.center.style.left = `${e.clientX - 5.5}px`;
+        });
+    }
+}
+
+// Gallery Management
+class GalleryManager {
+    constructor() {
+        this.modal = document.getElementById('gallery-modal');
+        if (!this.modal) return;
+
+        this.modalImg = document.getElementById('gallery-image');
+        this.closeBtn = this.modal.querySelector('.gallery-close');
+        this.prevBtn = this.modal.querySelector('.gallery-prev');
+        this.nextBtn = this.modal.querySelector('.gallery-next');
+        this.counter = document.getElementById('gallery-counter');
+
+        this.galleryImages = [];
+        this.currentIndex = 0;
+
+        this.init();
+    }
+
+    init() {
+        const projectCards = document.querySelectorAll('.project-card[data-gallery]');
+        projectCards.forEach(card => {
+            card.addEventListener('click', (e) => {
+                // Évite d'ouvrir la galerie si on clique sur un lien ou bouton
+                if (e.target.closest('a, button')) return;
+
+                const galleryData = card.getAttribute('data-gallery');
+                if (!galleryData) {
+                    console.warn('Aucune donnée de galerie trouvée pour cette carte');
+                    this.showError(card, 'Galerie non disponible');
+                    return;
+                }
+
+                try {
+                    this.galleryImages = JSON.parse(galleryData.replace(/'/g, '"'));
+
+                    // Vérification de la validité des images
+                    if (!Array.isArray(this.galleryImages) || this.galleryImages.length === 0) {
+                        throw new Error('Aucune image dans la galerie');
+                    }
+
+                    // Précharger la première image avant d'ouvrir
+                    this.preloadImage(this.galleryImages[0])
+                        .then(() => this.open(0))
+                        .catch(err => {
+                            console.error('Erreur de chargement de l\'image:', err);
+                            this.showError(card, 'Image non disponible');
+                        });
+
+                } catch (e) {
+                    console.error("Erreur lors de l'analyse des données de la galerie :", e);
+                    this.showError(card, 'Erreur de chargement de la galerie');
+                }
+            });
+        });
+
+        this.closeBtn.addEventListener('click', () => this.close());
+        this.prevBtn.addEventListener('click', () => this.showPrev());
+        this.nextBtn.addEventListener('click', () => this.showNext());
+
+        // Navigation clavier
+        document.addEventListener('keydown', (e) => {
+            if (!this.modal.classList.contains('visible')) return;
+
+            if (e.key === 'Escape') this.close();
+            if (e.key === 'ArrowLeft') this.showPrev();
+            if (e.key === 'ArrowRight') this.showNext();
+        });
+
+        this.modal.addEventListener('click', (e) => {
+            if (e.target === this.modal) {
+                this.close();
+            }
+        });
+    }
+
+    open(index) {
+        this.currentIndex = index;
+        this.updateImage();
+        this.modal.classList.add('visible');
+        document.body.style.overflow = 'hidden';
+    }
+
+    close() {
+        this.modal.classList.remove('visible');
+        document.body.style.overflow = 'auto';
+    }
+
+    showPrev() {
+        this.currentIndex = (this.currentIndex > 0) ? this.currentIndex - 1 : this.galleryImages.length - 1;
+        this.updateImage();
+    }
+
+    showNext() {
+        this.currentIndex = (this.currentIndex < this.galleryImages.length - 1) ? this.currentIndex + 1 : 0;
+        this.updateImage();
+    }
+
+    updateImage() {
+        const newSrc = this.galleryImages[this.currentIndex];
+
+        // Afficher un loader pendant le chargement
+        this.showLoader();
+
+        this.preloadImage(newSrc)
+            .then(() => {
+                this.modalImg.src = newSrc;
+                this.hideLoader();
+                this.counter.textContent = `${this.currentIndex + 1} / ${this.galleryImages.length}`;
+            })
+            .catch(err => {
+                console.error('Erreur de chargement de l\'image:', err);
+                this.hideLoader();
+                this.modalImg.alt = 'Image non disponible';
+                this.counter.textContent = `Image ${this.currentIndex + 1} non disponible`;
+            });
+    }
+
+    preloadImage(src) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error(`Impossible de charger: ${src}`));
+            img.src = src;
+        });
+    }
+
+    showLoader() {
+        if (!this.loader) {
+            this.loader = document.createElement('div');
+            this.loader.className = 'gallery-loader';
+            this.loader.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            this.modal.querySelector('.gallery-content').appendChild(this.loader);
+        }
+        this.loader.style.display = 'flex';
+    }
+
+    hideLoader() {
+        if (this.loader) {
+            this.loader.style.display = 'none';
+        }
+    }
+
+    showError(card, message) {
+        const errorEl = document.createElement('div');
+        errorEl.className = 'gallery-error-toast';
+        errorEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+        card.appendChild(errorEl);
+
+        setTimeout(() => {
+            errorEl.classList.add('show');
+        }, 10);
+
+        setTimeout(() => {
+            errorEl.classList.remove('show');
+            setTimeout(() => errorEl.remove(), 300);
+        }, 3000);
+    }
+}
+
+// Badge System
+class BadgeManager {
+    constructor() {
+        this.badges = {
+            'first-visit': {
+                name: 'Première Visite',
+                icon: '🎉',
+                description: 'Bienvenue sur CEA Ingénierie !',
+                earned: false
+            },
+            'cad-discoverer': {
+                name: 'Découvreur CAD',
+                icon: '📐',
+                description: 'Vous avez découvert le mode AutoCAD !',
+                earned: false
+            },
+            'theme-switcher': {
+                name: 'Caméléon',
+                icon: '🌓',
+                description: 'Vous aimez changer de thème !',
+                earned: false
+            },
+            'konami-master': {
+                name: 'Maître Konami',
+                icon: '🎮',
+                description: 'Code Konami activé !',
+                earned: false
+            },
+            'form-sender': {
+                name: 'Communicateur',
+                icon: '📧',
+                description: 'Message envoyé avec succès !',
+                earned: false
+            }
+        };
+
+        this.loadBadges();
+        this.init();
+    }
+
+    init() {
+        // Badge première visite
+        if (!this.badges['first-visit'].earned) {
+            setTimeout(() => {
+                this.earnBadge('first-visit');
+            }, 2000);
+        }
+
+        // Créer le panneau de badges
+        this.createBadgePanel();
+    }
+
+    loadBadges() {
+        const saved = localStorage.getItem('cea-badges');
+        if (saved) {
+            const savedBadges = JSON.parse(saved);
+            Object.keys(savedBadges).forEach(key => {
+                if (this.badges[key]) {
+                    this.badges[key].earned = savedBadges[key].earned;
+                }
+            });
+        }
+    }
+
+    saveBadges() {
+        localStorage.setItem('cea-badges', JSON.stringify(this.badges));
+    }
+
+    earnBadge(badgeId) {
+        if (!this.badges[badgeId] || this.badges[badgeId].earned) return;
+
+        this.badges[badgeId].earned = true;
+        this.saveBadges();
+        this.showBadgeNotification(badgeId);
+        this.updateBadgePanel();
+    }
+
+    showBadgeNotification(badgeId) {
+        const badge = this.badges[badgeId];
+        const notif = document.createElement('div');
+        notif.className = 'badge-notification';
+        notif.innerHTML = `
+            <div class="badge-icon">${badge.icon}</div>
+            <div class="badge-info">
+                <div class="badge-name">Badge débloqué !</div>
+                <div class="badge-desc">${badge.name}</div>
+            </div>
+        `;
+
+        document.body.appendChild(notif);
+
+        setTimeout(() => notif.classList.add('show'), 10);
+        setTimeout(() => {
+            notif.classList.remove('show');
+            setTimeout(() => notif.remove(), 500);
+        }, 4000);
+    }
+
+    createBadgePanel() {
+        // Créer le bouton toggle
+        const toggle = document.createElement('button');
+        toggle.className = 'badge-toggle';
+        toggle.title = 'Mes badges';
+        toggle.innerHTML = `
+            <i class="fas fa-trophy"></i>
+            <span class="badge-count">${this.getEarnedCount()}</span>
+        `;
+
+        document.body.appendChild(toggle);
+
+        // Créer le modal
+        const modal = document.createElement('div');
+        modal.className = 'badge-modal';
+        modal.innerHTML = `
+            <div class="badge-modal-overlay"></div>
+            <div class="badge-modal-content">
+                <div class="badge-modal-header">
+                    <h3><i class="fas fa-trophy"></i> Mes Badges</h3>
+                    <div class="badge-modal-actions">
+                        <button class="badge-reset-btn" title="Réinitialiser les badges">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                        <button class="badge-modal-close" aria-label="Fermer">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="badge-list"></div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        const overlay = modal.querySelector('.badge-modal-overlay');
+        const closeBtn = modal.querySelector('.badge-modal-close');
+        const resetBtn = modal.querySelector('.badge-reset-btn');
+
+        // Ouvrir le modal
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            modal.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            this.updateBadgePanel();
+        });
+
+        // Fermer le modal
+        const closeModal = () => {
+            modal.classList.remove('open');
+            document.body.style.overflow = '';
+        };
+
+        closeBtn.addEventListener('click', closeModal);
+        overlay.addEventListener('click', closeModal);
+
+        // Réinitialiser les badges
+        resetBtn.addEventListener('click', () => {
+            if (confirm('Voulez-vous vraiment réinitialiser tous vos badges ?')) {
+                Object.keys(this.badges).forEach(key => {
+                    this.badges[key].earned = false;
+                });
+                this.saveBadges();
+                this.updateBadgePanel();
+            }
+        });
+
+        // Fermer avec Échap
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.classList.contains('open')) {
+                closeModal();
+            }
+        });
+
+        this.updateBadgePanel();
+    }
+
+    updateBadgePanel() {
+        const list = document.querySelector('.badge-list');
+        const count = document.querySelector('.badge-count');
+
+        if (!list || !count) return;
+
+        count.textContent = this.getEarnedCount();
+
+        list.innerHTML = Object.keys(this.badges).map(key => {
+            const badge = this.badges[key];
+            return `
+                <div class="badge-item ${badge.earned ? 'earned' : 'locked'}">
+                    <div class="badge-icon-big">${badge.earned ? badge.icon : '🔒'}</div>
+                    <div class="badge-name">${badge.name}</div>
+                    <div class="badge-desc">${badge.earned ? badge.description : '???'}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    getEarnedCount() {
+        return Object.values(this.badges).filter(b => b.earned).length;
     }
 }
 
@@ -459,6 +1200,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const animationManager = new AnimationManager();
     const contactFormManager = new ContactFormManager();
     const performanceManager = new PerformanceManager();
+    const autocadManager = new AutoCADManager();
+    const galleryManager = new GalleryManager();
+    const badgeManager = new BadgeManager();
+
+    // Make badgeManager global for other classes
+    window.badgeManager = badgeManager;
+
+    // Initialize stats counter animation
+    initializeStatsCounter();
 
     // Add additional interactive features
     initializeInteractiveFeatures();
@@ -468,6 +1218,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log('🚀 CEA Ingénierie website loaded successfully!');
 });
+
+// Animated stats counter
+function initializeStatsCounter() {
+    const statNumbers = document.querySelectorAll('.stat-number');
+    let animated = false;
+
+    const animateCounter = (element) => {
+        const target = parseInt(element.getAttribute('data-target'));
+        if (isNaN(target)) return; // Skip if target is not a number
+
+        const duration = 2000; // 2 seconds
+        const increment = target / (duration / 16); // 60fps
+        let current = 0;
+
+        const updateCounter = () => {
+            current += increment;
+            if (current < target) {
+                element.textContent = Math.floor(current);
+                requestAnimationFrame(updateCounter);
+            } else {
+                element.textContent = target;
+            }
+        };
+
+        updateCounter();
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !animated) {
+                animated = true;
+                statNumbers.forEach(stat => animateCounter(stat));
+            }
+        });
+    }, { threshold: 0.5 });
+
+    const statsSection = document.querySelector('.expertise-stats');
+    if (statsSection) {
+        observer.observe(statsSection);
+    }
+}
 
 function initializeInteractiveFeatures() {
     // Add hover effects to cards
@@ -522,4 +1313,13 @@ function addScrollToTopButton() {
             behavior: 'smooth'
         });
     });
+
+    // Add floating call button
+    const callBtn = document.createElement('a');
+    callBtn.href = 'tel:+33493872517';
+    callBtn.className = 'floating-call-btn';
+    callBtn.innerHTML = '<i class="fas fa-phone"></i>';
+    callBtn.setAttribute('aria-label', 'Appeler CEA Ingénierie');
+
+    document.body.appendChild(callBtn);
 }

@@ -1,0 +1,11 @@
+# robots.txt pour CEA Ingénierie
+
+User-agent: *
+Allow: /
+
+# Fichiers à ne pas indexer
+Disallow: /sounds/
+Disallow: *.mp3$
+
+# Sitemap
+Sitemap: https://www.conception-ea.fr/sitemap.xml
